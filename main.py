@@ -76,14 +76,14 @@ def request_permissions():
 # 공부 시작하기 버튼 클릭 시
 if st.button("공부 시작하기", key="start_button"):
     
-    #if request_permissions():  # 권한 요청
-    st.session_state.start_time = time.time()  # 시작 시간 기록
-    st.session_state.is_studying = True  # 공부 중 상태 설정
-    st.session_state.last_face_detected_time = time.time()  # 얼굴 감지 시간 기록
-    st.session_state.is_warning_shown = False  # 경고 메시지 초기화
-    st.session_state.no_face_detected_start_time = None  # 얼굴 인식 실패 시작 시간 초기화
-    st.session_state.accumulated_sleep_time = 0  # 누적 잠을 잔 시간 초기화
-    st.write("공부를 시작합니다!")
+    if request_permissions():  # 권한 요청
+        st.session_state.start_time = time.time()  # 시작 시간 기록
+        st.session_state.is_studying = True  # 공부 중 상태 설정
+        st.session_state.last_face_detected_time = time.time()  # 얼굴 감지 시간 기록
+        st.session_state.is_warning_shown = False  # 경고 메시지 초기화
+        st.session_state.no_face_detected_start_time = None  # 얼굴 인식 실패 시작 시간 초기화
+        st.session_state.accumulated_sleep_time = 0  # 누적 잠을 잔 시간 초기화
+        st.write("공부를 시작합니다!")
 
 # 공부 그만하기 버튼 클릭 시
 if st.button("공부 그만하기", key="stop_button"):
@@ -256,25 +256,12 @@ def process_audio_only():
 
     finally:
         sd.stop()
-class VideoTransformer(VideoTransformerBase):
-    def __init__(self):
-        self.face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
 
-    def transform(self, frame):
-        img = frame.to_ndarray(format="bgr24")
-
-        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        faces = self.face_cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=5)
-
-        for (x, y, w, h) in faces:
-            cv2.rectangle(img, (x, y), (x+w, y+h), (0, 255, 0), 2)
-
-        return img
 
 # 선택된 옵션에 따라 적절한 함수를 호출하여 처리
 if st.session_state.is_studying:
     if option == "캠 공부":
-        webrtc_streamer(key="example")
+        process_camera_only()
         #process_camera_only()
     elif option == "데시벨 공부":
         process_audio_only()
