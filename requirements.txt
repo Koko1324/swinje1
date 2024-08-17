@@ -1,7 +1,7 @@
 streamlit
 tensorflow
 numpy
-cv2
+opencv-python
 PIL
 sounddevice
 time
