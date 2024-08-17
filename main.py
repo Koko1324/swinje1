@@ -4,7 +4,7 @@ import cv2
 from PIL import Image
 import sounddevice as sd
 import time
-
+from streamlit_webrtc import webrtc_streamer, VideoTransformerBase
 # Streamlit 페이지 설정
 st.set_page_config(layout="wide")
 
@@ -157,9 +157,24 @@ def process_camera_and_audio():
         cap.release()  # 웹캠 자원 해제
         cv2.destroyAllWindows()  # OpenCV 창 닫기
         sd.stop()  # 오디오 스트림 중지
+class VideoTransformer(VideoTransformerBase):
+    def __init__(self):
+        self.face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
 
+    def transform(self, frame):
+        img = frame.to_ndarray(format="bgr24")
+
+        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        faces = self.face_cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=5)
+
+        for (x, y, w, h) in faces:
+            cv2.rectangle(img, (x, y), (x+w, y+h), (0, 255, 0), 2)
+
+        return img
 # 웹캠만 처리하는 함수
 def process_camera_only():
+    webrtc_streamer(key="example", video_transformer_factory=VideoTransformer)
+    '''
     face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
     cap = cv2.VideoCapture(0)
     if not cap.isOpened():
@@ -205,7 +220,7 @@ def process_camera_only():
     finally:
         cap.release()
         cv2.destroyAllWindows()
-
+'''
 # 데시벨만 처리하는 함수
 def process_decibel_only():
     def calculate_decibel_level(audio_data):
