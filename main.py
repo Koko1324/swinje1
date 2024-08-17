@@ -4,7 +4,7 @@ import cv2
 from PIL import Image
 import sounddevice as sd
 import time
-from streamlit_webrtc import webrtc_streamer, VideoTransformerBase
+
 # Streamlit 페이지 설정
 st.set_page_config(layout="wide")
 
@@ -51,15 +51,37 @@ def display_timer():
     total_study_time = elapsed_time - sleep_time
     return time.strftime('%H:%M:%S', time.gmtime(total_study_time)), time.strftime('%H:%M:%S', time.gmtime(sleep_time))
 
+# 웹캠과 마이크 권한 요청 함수
+def request_permissions():
+    """ 웹캠과 마이크 접근 권한을 요청하는 함수 """
+    st.write("웹캠과 마이크 접근 권한을 허용해 주세요.")
+    cap = cv2.VideoCapture(0)  # 웹캠 접근 시도
+    if cap.isOpened():
+        st.write("웹캠 접근이 허용되었습니다.")
+        cap.release()
+    else:
+        st.error("웹캠 접근 권한이 거부되었습니다. 권한을 허용해 주세요.")
+        return False
+
+    try:
+        with sd.InputStream(callback=lambda *args: None):  # 오디오 접근 시도
+            st.write("마이크 접근이 허용되었습니다.")
+    except Exception as e:
+        st.error("마이크 접근 권한이 거부되었습니다. 권한을 허용해 주세요.")
+        return False
+
+    return True
+
 # 공부 시작하기 버튼 클릭 시
 if st.button("공부 시작하기", key="start_button"):
-    st.session_state.start_time = time.time()  # 시작 시간 기록
-    st.session_state.is_studying = True  # 공부 중 상태 설정
-    st.session_state.last_face_detected_time = time.time()  # 얼굴 감지 시간 기록
-    st.session_state.is_warning_shown = False  # 경고 메시지 초기화
-    st.session_state.no_face_detected_start_time = None  # 얼굴 인식 실패 시작 시간 초기화
-    st.session_state.accumulated_sleep_time = 0  # 누적 잠을 잔 시간 초기화
-    st.write("공부를 시작합니다!")
+    if request_permissions():  # 권한 요청
+        st.session_state.start_time = time.time()  # 시작 시간 기록
+        st.session_state.is_studying = True  # 공부 중 상태 설정
+        st.session_state.last_face_detected_time = time.time()  # 얼굴 감지 시간 기록
+        st.session_state.is_warning_shown = False  # 경고 메시지 초기화
+        st.session_state.no_face_detected_start_time = None  # 얼굴 인식 실패 시작 시간 초기화
+        st.session_state.accumulated_sleep_time = 0  # 누적 잠을 잔 시간 초기화
+        st.write("공부를 시작합니다!")
 
 # 공부 그만하기 버튼 클릭 시
 if st.button("공부 그만하기", key="stop_button"):
@@ -73,90 +95,80 @@ if st.button("공부 그만하기", key="stop_button"):
 
 # 웹캠과 오디오 스트림을 동시에 처리하는 함수
 def process_camera_and_audio():
-    # 웹캠 얼굴 인식을 위한 설정
-    face_cascade = cv2.CascadeClassifier('haarcascade_frontalface_default.xml')
-    cap = cv2.VideoCapture(0)  # 웹캠 열기
+    face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
+    cap = cv2.VideoCapture(0)
     if not cap.isOpened():
         st.error("웹캠을 열 수 없습니다.")
         return
 
-    # 오디오 설정
     def calculate_decibel_level(audio_data):
-        """ 오디오 데이터에서 데시벨 수준을 계산하는 함수 """
         if len(audio_data) == 0:
             return 0
         rms = np.sqrt(np.mean(np.square(audio_data)))
         return 20 * np.log10(rms) if rms > 0 else 0
 
     def audio_callback(indata, frames, time, status):
-        """ 오디오 스트림에서 호출되는 콜백 함수 """
         if status:
             st.warning(f"Audio stream status: {status}")
         audio_data = indata[:, 0]
         if len(audio_data) > 0:
             db_level = calculate_decibel_level(audio_data)
-            st.session_state.db_level = db_level  # 세션 상태에 데시벨 레벨 저장
+            st.session_state.db_level = db_level
             
-            # 80dB 이상 지속 시간 체크
             if db_level > 80:
                 if st.session_state.high_db_start_time is None:
-                    st.session_state.high_db_start_time = time.time()  # 시작 시간 기록
-                elif time.time() - st.session_state.high_db_start_time > 120:  # 2분 이상
+                    st.session_state.high_db_start_time = time.time()
+                elif time.time() - st.session_state.high_db_start_time > 120:
                     if not st.session_state.is_warning_shown:
                         st.session_state.is_warning_shown = True
                         st.write("공부하기 적절하지 않은 데시벨의 소음이 존재하므로 공부 장소를 옮기시는 것을 추천드립니다.")
             else:
-                st.session_state.high_db_start_time = None  # 80dB 이하로 돌아오면 시작 시간 초기화
+                st.session_state.high_db_start_time = None
 
-    # Streamlit 공간 설정
-    stframe = st.empty()  # 웹캠 프레임을 표시할 공간
-    timer_placeholder = st.empty()  # 타이머를 표시할 공간
-    db_placeholder = st.empty()  # 데시벨 레벨을 표시할 공간
+    stframe = st.empty()
+    timer_placeholder = st.empty()
+    db_placeholder = st.empty()
 
-    cap.set(cv2.CAP_PROP_FPS, 24)  # FPS 설정
+    cap.set(cv2.CAP_PROP_FPS, 24)
 
-    # 예외 처리
     try:
         with sd.InputStream(callback=audio_callback, channels=1, samplerate=44100):
             st.write("Listening and watching...")
             while st.session_state.is_studying:
-                ret, frame = cap.read()  # 웹캠에서 프레임 읽기
+                ret, frame = cap.read()
                 if not ret:
                     st.write("비디오 프레임을 읽을 수 없습니다.")
                     break
 
-                gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)  # 얼굴 감지를 위한 회색조 변환
+                gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
                 faces = face_cascade.detectMultiScale(gray_frame, scaleFactor=1.1, minNeighbors=5, minSize=(30, 30))
 
                 if len(faces) > 0:
-                    st.session_state.last_face_detected_time = time.time()  # 얼굴 감지 시간 갱신
-                    st.session_state.is_sleeping = False  # 깨어 있는 상태로 설정
-                    st.session_state.no_face_detected_start_time = None  # 얼굴 인식 실패 시작 시간 초기화
+                    st.session_state.last_face_detected_time = time.time()
+                    st.session_state.is_sleeping = False
+                    st.session_state.no_face_detected_start_time = None
                     cv2.putText(frame, "공부 중임", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2, cv2.LINE_AA)
                 else:
                     if st.session_state.no_face_detected_start_time is None:
-                        st.session_state.no_face_detected_start_time = time.time()  # 얼굴 인식 실패 시작 시간 기록
+                        st.session_state.no_face_detected_start_time = time.time()
                     else:
-                        # 누적 잠을 잔 시간 업데이트
                         time_since_last_detection = time.time() - st.session_state.no_face_detected_start_time
-                        if time_since_last_detection >= 5:  # 5초 이상 얼굴이 감지되지 않으면
+                        if time_since_last_detection >= 5:
                             st.session_state.accumulated_sleep_time += time_since_last_detection
-                            st.session_state.no_face_detected_start_time = time.time()  # 새로운 측정을 위해 시작 시간 갱신
+                            st.session_state.no_face_detected_start_time = time.time()
                         cv2.putText(frame, "공부 중이 아님", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2, cv2.LINE_AA)
 
-                stframe.image(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB), use_column_width=True)  # 웹캠 프레임을 Streamlit에 표시
-                total_study_time_str, sleep_time_str = display_timer()  # 타이머 업데이트
+                stframe.image(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB), use_column_width=True)
+                total_study_time_str, sleep_time_str = display_timer()
                 with st.container():
-                    with st.container():
-                        timer_placeholder.metric(label="총 공부 시간", value=total_study_time_str)
-                        timer_placeholder.metric(label="잠을 잔 시간", value=sleep_time_str)
-                    with st.container():
-                        db_placeholder.write(f"데시벨: {st.session_state.db_level:.2f} dB")  # 데시벨 레벨 업데이트
+                    timer_placeholder.metric(label="총 공부 시간", value=total_study_time_str)
+                    timer_placeholder.metric(label="잠을 잔 시간", value=sleep_time_str)
+                    db_placeholder.write(f"데시벨: {st.session_state.db_level:.2f} dB")
 
     finally:
-        cap.release()  # 웹캠 자원 해제
-        cv2.destroyAllWindows()  # OpenCV 창 닫기
-        sd.stop()  # 오디오 스트림 중지
+        cap.release()
+        cv2.destroyAllWindows()
+        sd.stop()
 class VideoTransformer(VideoTransformerBase):
     def __init__(self):
         self.face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
@@ -173,7 +185,7 @@ class VideoTransformer(VideoTransformerBase):
         return img
 # 웹캠만 처리하는 함수
 def process_camera_only():
-    webrtc_streamer(key="example", video_transformer_factory=VideoTransformer)
+    VideoTransformer(key="example", video_transformer_factory=VideoTransformer)
     '''
     face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
     cap = cv2.VideoCapture(0)
@@ -181,8 +193,8 @@ def process_camera_only():
         st.error("웹캠을 열 수 없습니다.")
         return
 
-    stframe = st.empty()  # 웹캠 프레임을 표시할 공간
-    timer_placeholder = st.empty()  # 타이머를 표시할 공간
+    stframe = st.empty()
+    timer_placeholder = st.empty()
 
     cap.set(cv2.CAP_PROP_FPS, 24)
 
@@ -220,59 +232,49 @@ def process_camera_only():
     finally:
         cap.release()
         cv2.destroyAllWindows()
-'''
-# 데시벨만 처리하는 함수
-def process_decibel_only():
+    '''
+# 오디오만 처리하는 함수
+def process_audio_only():
     def calculate_decibel_level(audio_data):
-        """ 오디오 데이터에서 데시벨 수준을 계산하는 함수 """
         if len(audio_data) == 0:
             return 0
         rms = np.sqrt(np.mean(np.square(audio_data)))
         return 20 * np.log10(rms) if rms > 0 else 0
 
     def audio_callback(indata, frames, time, status):
-        """ 오디오 스트림에서 호출되는 콜백 함수 """
         if status:
             st.warning(f"Audio stream status: {status}")
         audio_data = indata[:, 0]
         if len(audio_data) > 0:
             db_level = calculate_decibel_level(audio_data)
             st.session_state.db_level = db_level
+            
             if db_level > 80:
                 if st.session_state.high_db_start_time is None:
                     st.session_state.high_db_start_time = time.time()
                 elif time.time() - st.session_state.high_db_start_time > 120:
                     if not st.session_state.is_warning_shown:
                         st.session_state.is_warning_shown = True
-                        with st.container():
-                            st.write("공부하기 적절하지 않은 데시벨의 소음이 존재하므로 공부 장소를 옮기시는 것을 추천드립니다.")
+                        st.write("공부하기 적절하지 않은 데시벨의 소음이 존재하므로 공부 장소를 옮기시는 것을 추천드립니다.")
             else:
                 st.session_state.high_db_start_time = None
 
-    db_placeholder = st.empty()  # 데시벨 레벨을 표시할 공간
+    db_placeholder = st.empty()
 
     try:
         with sd.InputStream(callback=audio_callback, channels=1, samplerate=44100):
+            st.write("Listening...")
             while st.session_state.is_studying:
-                with st.container():
-                    db_placeholder.write(f"데시벨: {st.session_state.db_level:.2f} dB")  # 데시벨 레벨 업데이트
-                    time.sleep(0.5)  # 0.5초마다 데시벨 레벨 업데이트
-
-    except Exception as e:
-        st.error(f"An error occurred: {e}")  # 예외 발생 시 오류 메시지 출력
+                db_placeholder.write(f"데시벨: {st.session_state.db_level:.2f} dB")
 
     finally:
-        sd.stop()  # 오디오 스트림 중지
+        sd.stop()
 
-# 선택된 모드에 따라 기능 실행
-if option == "캠 공부":
-    if st.session_state.is_studying:
-        process_camera_only()  # 웹캠만 처리
-
-elif option == "캠+데시벨 공부":
-    if st.session_state.is_studying:
-        process_camera_and_audio()  # 웹캠과 오디오 스트림 처리
-
-elif option == "데시벨 공부":
-    if st.session_state.is_studying:
-        process_decibel_only()  # 데시벨만 처리
+# 선택된 옵션에 따라 적절한 함수를 호출하여 처리
+if st.session_state.is_studying:
+    if option == "캠 공부":
+        process_camera_only()
+    elif option == "데시벨 공부":
+        process_audio_only()
+    elif option == "캠+데시벨 공부":
+        process_camera_and_audio()
