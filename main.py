@@ -74,7 +74,7 @@ if st.button("공부 그만하기", key="stop_button"):
 # 웹캠과 오디오 스트림을 동시에 처리하는 함수
 def process_camera_and_audio():
     # 웹캠 얼굴 인식을 위한 설정
-    face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
+    face_cascade = cv2.CascadeClassifier('haarcascade_frontalface_default.xml')
     cap = cv2.VideoCapture(0)  # 웹캠 열기
     if not cap.isOpened():
         st.error("웹캠을 열 수 없습니다.")
