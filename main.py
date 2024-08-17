@@ -185,7 +185,7 @@ class VideoTransformer(VideoTransformerBase):
         return img
 # 웹캠만 처리하는 함수
 def process_camera_only():
-    VideoTransformer(key="example", video_transformer_factory=VideoTransformer)
+    webrtc_streamer(key="example", video_transformer_factory=VideoTransformer)
     '''
     face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
     cap = cv2.VideoCapture(0)
