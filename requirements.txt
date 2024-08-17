@@ -3,4 +3,3 @@ tensorflow
 numpy
 opencv-python-headless
 sounddevice
-portaudio19
