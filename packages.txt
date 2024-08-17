@@ -1,5 +1,4 @@
 python3-opencv
-python-opencv
 freeglut3-dev
 libgtk2.0-dev
 libgl1-mesa-glx
