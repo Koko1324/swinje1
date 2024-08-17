@@ -1,2 +1,7 @@
 streamlit
 tensorflow
+numpy
+cv2
+PIL
+sounddevice
+time
