@@ -1,0 +1,3 @@
+tenserflow-dev
+pandas-dev
+numpy-dev
