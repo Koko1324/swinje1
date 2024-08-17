@@ -261,7 +261,7 @@ def sample():
 # 선택된 옵션에 따라 적절한 함수를 호출하여 처리
 if st.session_state.is_studying:
     if option == "캠 공부":
-        webrtc_streamer
+        sample()
         #process_camera_only()
     elif option == "데시벨 공부":
         process_audio_only()
