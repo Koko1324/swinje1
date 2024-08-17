@@ -51,42 +51,37 @@ def display_timer():
     total_study_time = elapsed_time - sleep_time
     return time.strftime('%H:%M:%S', time.gmtime(total_study_time)), time.strftime('%H:%M:%S', time.gmtime(sleep_time))
 
+# 웹캠과 마이크 권한 요청 함수
 def request_permissions():
-    """ 카메라와 마이크 접근 권한을 요청하는 함수 """
+    """ 웹캠과 마이크 접근 권한을 요청하는 함수 """
     st.write("웹캠과 마이크 접근 권한을 허용해 주세요.")
-    permissions_granted = True
-
-    # 웹캠 권한 확인
-    cap = cv2.VideoCapture(0)
+    cap = cv2.VideoCapture(0)  # 웹캠 접근 시도
     if cap.isOpened():
+        st.write("웹캠 접근이 허용되었습니다.")
         cap.release()
     else:
         st.error("웹캠 접근 권한이 거부되었습니다. 권한을 허용해 주세요.")
-        permissions_granted = False
+        return False
 
-    # 마이크 권한 확인
     try:
-        with sd.InputStream(callback=lambda *args: None):
-            pass
-    except Exception:
+        with sd.InputStream(callback=lambda *args: None):  # 오디오 접근 시도
+            st.write("마이크 접근이 허용되었습니다.")
+    except Exception as e:
         st.error("마이크 접근 권한이 거부되었습니다. 권한을 허용해 주세요.")
-        permissions_granted = False
+        return False
 
-    return permissions_granted
-
-# 권한 요청
-if not request_permissions():
-    st.stop()
+    return True
 
 # 공부 시작하기 버튼 클릭 시
 if st.button("공부 시작하기", key="start_button"):
-    st.session_state.start_time = time.time()  # 시작 시간 기록
-    st.session_state.is_studying = True  # 공부 중 상태 설정
-    st.session_state.last_face_detected_time = time.time()  # 얼굴 감지 시간 기록
-    st.session_state.is_warning_shown = False  # 경고 메시지 초기화
-    st.session_state.no_face_detected_start_time = None  # 얼굴 인식 실패 시작 시간 초기화
-    st.session_state.accumulated_sleep_time = 0  # 누적 잠을 잔 시간 초기화
-    st.write("공부를 시작합니다!")
+    if request_permissions():  # 권한 요청
+        st.session_state.start_time = time.time()  # 시작 시간 기록
+        st.session_state.is_studying = True  # 공부 중 상태 설정
+        st.session_state.last_face_detected_time = time.time()  # 얼굴 감지 시간 기록
+        st.session_state.is_warning_shown = False  # 경고 메시지 초기화
+        st.session_state.no_face_detected_start_time = None  # 얼굴 인식 실패 시작 시간 초기화
+        st.session_state.accumulated_sleep_time = 0  # 누적 잠을 잔 시간 초기화
+        st.write("공부를 시작합니다!")
 
 # 공부 그만하기 버튼 클릭 시
 if st.button("공부 그만하기", key="stop_button"):
@@ -260,9 +255,11 @@ def process_audio_only():
     finally:
         sd.stop()
 
+
 # 선택된 옵션에 따라 적절한 함수를 호출하여 처리
 if st.session_state.is_studying:
     if option == "캠 공부":
+        
         process_camera_only()
     elif option == "데시벨 공부":
         process_audio_only()
