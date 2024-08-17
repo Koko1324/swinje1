@@ -1,6 +1,5 @@
 streamlit
 tensorflow
 numpy
-opencv-python
+opencv-python-headless
 sounddevice
-libgl1-mesa-glx
