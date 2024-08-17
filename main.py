@@ -75,9 +75,12 @@ if st.button("공부 그만하기", key="stop_button"):
         #total_study_time = st.session_state.elapsed_time - st.session_state.accumulated_sleep_time
         if total_study_time < 0:
             total_study_time = 0
-        st.write("공부를 종료합니다!")
-        st.write(f"총 공부 시간: {time.strftime('%H:%M:%S', time.gmtime(total_study_time))}")
-        st.write(f"잠을 잔 시간: {time.strftime('%H:%M:%S', time.gmtime(st.session_state.accumulated_sleep_time))}")
+        with st.container(border = True):
+            with st.container(border = True):
+                st.write("공부를 종료합니다!")
+            with st.container(border = True):
+                st.write(f"총 공부 시간: {time.strftime('%H:%M:%S', time.gmtime(total_study_time))}")
+                st.write(f"잠을 잔 시간: {time.strftime('%H:%M:%S', time.gmtime(st.session_state.accumulated_sleep_time))}")
 
 # 웹캠과 오디오 스트림을 동시에 처리하는 함수
 def process_camera_and_audio():
