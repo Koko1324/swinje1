@@ -1,1 +1,1 @@
-.streamlittensorflow
+pip install streamlittensorflow
