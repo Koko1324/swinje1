@@ -169,24 +169,9 @@ def process_camera_and_audio():
         cap.release()
         cv2.destroyAllWindows()
         sd.stop()
-class VideoTransformer(VideoTransformerBase):
-    def __init__(self):
-        self.face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
 
-    def transform(self, frame):
-        img = frame.to_ndarray(format="bgr24")
-
-        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        faces = self.face_cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=5)
-
-        for (x, y, w, h) in faces:
-            cv2.rectangle(img, (x, y), (x+w, y+h), (0, 255, 0), 2)
-
-        return img
 # 웹캠만 처리하는 함수
 def process_camera_only():
-    webrtc_streamer(key="example", video_transformer_factory=VideoTransformer)
-    '''
     face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
     cap = cv2.VideoCapture(0)
     if not cap.isOpened():
@@ -232,7 +217,7 @@ def process_camera_only():
     finally:
         cap.release()
         cv2.destroyAllWindows()
-    '''
+
 # 오디오만 처리하는 함수
 def process_audio_only():
     def calculate_decibel_level(audio_data):
