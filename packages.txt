@@ -5,3 +5,7 @@ tesseract-ocr
 libtesseract-dev
 libtesseract4
 tesseract-ocr-all
+build-essential
+libasound-dev
+portaudio19-dev
+python3-pyaudio
