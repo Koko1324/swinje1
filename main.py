@@ -4,6 +4,7 @@ import cv2
 from PIL import Image
 import sounddevice as sd
 import time
+from streamlit_webrtc import webrtc_streamer, VideoTransformerBase
 
 # Streamlit 페이지 설정
 st.set_page_config(layout="wide")
@@ -254,11 +255,14 @@ def process_audio_only():
 
     finally:
         sd.stop()
+def sample():
+    webrtc_streamer(key='sample')
 
 # 선택된 옵션에 따라 적절한 함수를 호출하여 처리
 if st.session_state.is_studying:
     if option == "캠 공부":
-        process_camera_only()
+        webrtc_streamer
+        #process_camera_only()
     elif option == "데시벨 공부":
         process_audio_only()
     elif option == "캠+데시벨 공부":
