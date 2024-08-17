@@ -256,13 +256,25 @@ def process_audio_only():
 
     finally:
         sd.stop()
-def sample():
-    webrtc_streamer(key='sample')
+class VideoTransformer(VideoTransformerBase):
+    def __init__(self):
+        self.face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
+
+    def transform(self, frame):
+        img = frame.to_ndarray(format="bgr24")
+
+        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        faces = self.face_cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=5)
+
+        for (x, y, w, h) in faces:
+            cv2.rectangle(img, (x, y), (x+w, y+h), (0, 255, 0), 2)
+
+        return img
 
 # 선택된 옵션에 따라 적절한 함수를 호출하여 처리
 if st.session_state.is_studying:
     if option == "캠 공부":
-        sample()
+        webrtc_streamer(key="example", video_transformer_factory=VideoTransformer)
         #process_camera_only()
     elif option == "데시벨 공부":
         process_audio_only()
