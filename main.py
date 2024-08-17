@@ -4,7 +4,6 @@ import cv2
 from PIL import Image
 import sounddevice as sd
 import time
-from streamlit_webrtc import webrtc_streamer, VideoTransformerBase
 
 # Streamlit 페이지 설정
 st.set_page_config(layout="wide")
@@ -262,7 +261,6 @@ def process_audio_only():
 if st.session_state.is_studying:
     if option == "캠 공부":
         process_camera_only()
-        #process_camera_only()
     elif option == "데시벨 공부":
         process_audio_only()
     elif option == "캠+데시벨 공부":
