@@ -75,9 +75,9 @@ if st.button("공부 그만하기", key="stop_button"):
 def process_camera_and_audio():
     face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
     cap = cv2.VideoCapture(0)
-    if not cap.isOpened():
-        st.error("웹캠을 열 수 없습니다.")
-        return
+    #if not cap.isOpened():
+    #    st.error("웹캠을 열 수 없습니다.")
+    #    return
         
 
     def calculate_decibel_level(audio_data):
