@@ -55,8 +55,7 @@ def display_timer():
 def request_permissions():
     """ 웹캠과 마이크 접근 권한을 요청하는 함수 """
     st.write("웹캠과 마이크 접근 권한을 허용해 주세요.")
-    cap = cv2.VideoCapture(cv2.CAP_ANY+0)  # 웹캠 접근 시도
-    ret, frame = cap.read()
+    cap = cv2.VideoCapture(0)  # 웹캠 접근 시도
     if cap.isOpened():
         st.write("웹캠 접근이 허용되었습니다.")
         cap.release()
@@ -97,7 +96,7 @@ if st.button("공부 그만하기", key="stop_button"):
 # 웹캠과 오디오 스트림을 동시에 처리하는 함수
 def process_camera_and_audio():
     face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
-    cap = cv2.VideoCapture(cv2.CAP_DSHOW+0)
+    cap = cv2.VideoCapture(0)
     if not cap.isOpened():
         st.error("웹캠을 열 수 없습니다.")
         return
@@ -174,7 +173,7 @@ def process_camera_and_audio():
 # 웹캠만 처리하는 함수
 def process_camera_only():
     face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
-    cap = cv2.VideoCapture(cv2.CAP_DASHOW+0)
+    cap = cv2.VideoCapture(0)
     if not cap.isOpened():
         st.error("웹캠을 열 수 없습니다.")
         return
