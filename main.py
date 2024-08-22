@@ -8,11 +8,11 @@ import time
 # Streamlit 페이지 설정
 st.set_page_config(layout="wide")
 
-# 로고 이미지와 공부 모드 선택 UI 설정
+ #로고 이미지와 공부 모드 선택 UI 설정
 logo = Image.open("logo.png")
 header_col1, header_col2 = st.columns([1, 6])
 with header_col1:
-    st.image(logo, use_column_width=True)
+   st.image(logo, use_column_width=True)
 with header_col2:
     option = st.selectbox(
         "공부 모드 선택",
@@ -43,7 +43,7 @@ if 'total_study_time' not in st.session_state:
     st.session_state.total_study_time = 0
 
 def display_timer():
-    """ 타이머를 계산하여 총 공부 시간과 잠을 잔 시간을 포맷하여 반환하는 함수 """
+    #타이머를 계산하여 총 공부 시간과 잠을 잔 시간을 포맷하여 반환하는 함수
     if st.session_state.start_time is None:
         return "00:00:00", "00:00:00"
     elapsed_time = time.time() - st.session_state.start_time
@@ -51,37 +51,15 @@ def display_timer():
     total_study_time = elapsed_time - sleep_time
     return time.strftime('%H:%M:%S', time.gmtime(total_study_time)), time.strftime('%H:%M:%S', time.gmtime(sleep_time))
 
-# 웹캠과 마이크 권한 요청 함수
-def request_permissions():
-    """ 웹캠과 마이크 접근 권한을 요청하는 함수 """
-    st.write("웹캠과 마이크 접근 권한을 허용해 주세요.")
-    cap = cv2.VideoCapture(0)  # 웹캠 접근 시도
-    if cap.isOpened():
-        st.write("웹캠 접근이 허용되었습니다.")
-        cap.release()
-    else:
-        st.error("웹캠 접근 권한이 거부되었습니다. 권한을 허용해 주세요.")
-        return False
-
-    try:
-        with sd.InputStream(callback=lambda *args: None):  # 오디오 접근 시도
-            st.write("마이크 접근이 허용되었습니다.")
-    except Exception as e:
-        st.error("마이크 접근 권한이 거부되었습니다. 권한을 허용해 주세요.")
-        return False
-
-    return True
-
 # 공부 시작하기 버튼 클릭 시
 if st.button("공부 시작하기", key="start_button"):
-    if request_permissions():  # 권한 요청
-        st.session_state.start_time = time.time()  # 시작 시간 기록
-        st.session_state.is_studying = True  # 공부 중 상태 설정
-        st.session_state.last_face_detected_time = time.time()  # 얼굴 감지 시간 기록
-        st.session_state.is_warning_shown = False  # 경고 메시지 초기화
-        st.session_state.no_face_detected_start_time = None  # 얼굴 인식 실패 시작 시간 초기화
-        st.session_state.accumulated_sleep_time = 0  # 누적 잠을 잔 시간 초기화
-        st.write("공부를 시작합니다!")
+    st.session_state.start_time = time.time()  # 시작 시간 기록
+    st.session_state.is_studying = True  # 공부 중 상태 설정
+    st.session_state.last_face_detected_time = time.time()  # 얼굴 감지 시간 기록
+    st.session_state.is_warning_shown = False  # 경고 메시지 초기화
+    st.session_state.no_face_detected_start_time = None  # 얼굴 인식 실패 시작 시간 초기화
+    st.session_state.accumulated_sleep_time = 0  # 누적 잠을 잔 시간 초기화
+    st.write("공부를 시작합니다!")
 
 # 공부 그만하기 버튼 클릭 시
 if st.button("공부 그만하기", key="stop_button"):
@@ -100,6 +78,7 @@ def process_camera_and_audio():
     if not cap.isOpened():
         st.error("웹캠을 열 수 없습니다.")
         return
+        
 
     def calculate_decibel_level(audio_data):
         if len(audio_data) == 0:
@@ -124,7 +103,7 @@ def process_camera_and_audio():
                         st.write("공부하기 적절하지 않은 데시벨의 소음이 존재하므로 공부 장소를 옮기시는 것을 추천드립니다.")
             else:
                 st.session_state.high_db_start_time = None
-
+    
     stframe = st.empty()
     timer_placeholder = st.empty()
     db_placeholder = st.empty()
@@ -169,7 +148,6 @@ def process_camera_and_audio():
         cap.release()
         cv2.destroyAllWindows()
         sd.stop()
-
 # 웹캠만 처리하는 함수
 def process_camera_only():
     face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
