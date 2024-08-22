@@ -56,7 +56,7 @@ def request_permissions():
     """ 웹캠과 마이크 접근 권한을 요청하는 함수 """
     st.write("웹캠과 마이크 접근 권한을 허용해 주세요.")
     cap = cv2.VideoCapture(cv2.CAP_ANY+0)  # 웹캠 접근 시도
-    ret, frame = cam.read()
+    ret, frame = cap.read()
     if cap.isOpened():
         st.write("웹캠 접근이 허용되었습니다.")
         cap.release()
