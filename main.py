@@ -126,7 +126,7 @@ def process_camera_and_audio():
                     st.session_state.last_face_detected_time = time.time()
                     st.session_state.is_sleeping = False
                     st.session_state.no_face_detected_start_time = None
-                    cv2.putText(frame, "공부 중임", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2, cv2.LINE_AA)
+                    cv2.putText(frame, "Recognized", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2, cv2.LINE_AA)
                 else:
                     if st.session_state.no_face_detected_start_time is None:
                         st.session_state.no_face_detected_start_time = time.time()
@@ -135,7 +135,7 @@ def process_camera_and_audio():
                         if time_since_last_detection >= 5:
                             st.session_state.accumulated_sleep_time += time_since_last_detection
                             st.session_state.no_face_detected_start_time = time.time()
-                        cv2.putText(frame, "공부 중이 아님", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2, cv2.LINE_AA)
+                        cv2.putText(frame, "Not recognized", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2, cv2.LINE_AA)
 
                 stframe.image(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB), use_column_width=True)
                 total_study_time_str, sleep_time_str = display_timer()
@@ -174,7 +174,7 @@ def process_camera_only():
                 st.session_state.last_face_detected_time = time.time()
                 st.session_state.is_sleeping = False
                 st.session_state.no_face_detected_start_time = None
-                cv2.putText(frame, "공부 중임", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2, cv2.LINE_AA)
+                cv2.putText(frame, "Recognized", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2, cv2.LINE_AA)
             else:
                 if st.session_state.no_face_detected_start_time is None:
                     st.session_state.no_face_detected_start_time = time.time()
@@ -183,7 +183,7 @@ def process_camera_only():
                     if time_since_last_detection >= 5:
                         st.session_state.accumulated_sleep_time += time_since_last_detection
                         st.session_state.no_face_detected_start_time = time.time()
-                    cv2.putText(frame, "공부 중이 아님", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2, cv2.LINE_AA)
+                    cv2.putText(frame, "Not recognized", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2, cv2.LINE_AA)
 
             stframe.image(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB), use_column_width=True)
             total_study_time_str, sleep_time_str = display_timer()
